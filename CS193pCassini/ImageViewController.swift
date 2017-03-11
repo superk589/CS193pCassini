@@ -19,6 +19,7 @@ class ImageViewController: UIViewController {
             scrollView.addSubview(imageView)
         }
     }
+    @IBOutlet weak var spinner: UIActivityIndicatorView!
     
     fileprivate var imageView = UIImageView()
     
@@ -39,13 +40,8 @@ class ImageViewController: UIViewController {
             imageView.image = newValue
             imageView.sizeToFit()
             scrollView?.contentSize = imageView.frame.size
+            spinner?.stopAnimating()
         }
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        imageURL = DemoURL.stanford
-        // Do any additional setup after loading the view, typically from a nib.
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -57,9 +53,14 @@ class ImageViewController: UIViewController {
     
     private func fetchImage() {
         if let url = imageURL {
-            let urlContents = try? Data.init(contentsOf: url)
-            if let imageData = urlContents {
-                image = UIImage.init(data: imageData)
+            spinner.startAnimating()
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                let urlContents = try? Data.init(contentsOf: url)
+                if let imageData = urlContents, url == self?.imageURL {
+                    DispatchQueue.main.async {
+                        self?.image = UIImage.init(data: imageData)
+                    }
+                }
             }
         }
     }
